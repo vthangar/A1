@@ -45,7 +45,6 @@ void init_shell() {
         setpgid(SHELL_PID, SHELL_PID); // Make shell process -> new process group leader
         SHELL_PROCESS_GROUP_ID = getpgrp();
         if (SHELL_PID != SHELL_PROCESS_GROUP_ID) {
-            printf("Error, the shell is not process group leader");
             exit(EXIT_FAILURE);
         }
         // Get control of terminal
@@ -55,7 +54,6 @@ void init_shell() {
         // Get current directory (needed for different functions)
         currentDirectory = (char*) calloc(1024, sizeof(char));
     } else {
-        printf("Could not make the shell interactive.\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -68,7 +66,7 @@ void init_shell() {
  */
 void welcome_screen() {
     printf("\n\t==============================================\n");
-    printf("\t             My C Shell - CIS*3110\n");
+    printf("\t               CIS*3110 - C Shell\n");
     printf("\t       Developed by: Vithursan Thangarasa\n");
     printf("\t               Date: 2016-02-12            \n");
     printf("\t==============================================\n");

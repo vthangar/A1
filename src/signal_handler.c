@@ -31,7 +31,6 @@ void child_signal_handler(int p){
 void int_signal_handler(int p){
     // Child process receives a SIGTERM signal
     if (kill(pid,SIGTERM) == 0){
-        printf("\nProcess %d received a SIGINT signal\n",pid);
         no_reprint_prmpt = 1;
     }else{
         printf("\n");

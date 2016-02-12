@@ -48,55 +48,79 @@ static int change_directory(char* args[]) {
 }
 
 /**
+ * Function Name: remove_char
+ * Description: Function to remove first character of string
+ * Inputs: char * char_buffer
+ * Returns: char
+ */
+static char *remove_char(char *char_buffer) {
+    char *str;
+    
+    if (strlen(char_buffer) == 0) {
+        str = char_buffer;
+    }else{
+        str = char_buffer + 1;
+    }
+    return str;
+}
+
+/**
  * Function Name: manage_environ
  * Description: Function to manage environment variables
  * Inputs: char * args[], int option
  * Returns: int 
  */
 static int manage_environ(char * args[], int option) {
-    char **env_aux;
+    
+    char *var_path;
+
     switch(option){
-        // Case 0: Prints the environment variables with their values
+        // Case 0: Prints path for specified environment variable
         case 0:
-            for(env_aux = environ; *env_aux != 0; env_aux ++){
-                printf("%s\n", *env_aux);
-            }
-            break;
-        // Case 1: Sets an environment variable to a value
-        case 1:
-            if((args[1] == NULL) && args[2] == NULL){
-                printf("%s","Not enought input arguments\n");
-                return -1;
-            }
-            
-            // Use different output for new and overwritten variables
-            if(getenv(args[1]) != NULL){
-                printf("%s", "The variable has been overwritten\n");
-            }else{
-                printf("%s", "The variable has been created\n");
-            }
-            
-            // If no value is specified for the variable, set it to ""
-            if (args[2] == NULL){
-                setenv(args[1], "", 1);
-            // Set the variable to the given value
-            }else{
-                setenv(args[1], args[2], 1);
-            }
-            break;
-        // Case 2: Deletes an environment variable
-        case 2:
+            // Check if enough input args
             if(args[1] == NULL){
-                printf("%s","Not enought input arguments\n");
+                printf("%s","not enought input arguments\n");
                 return -1;
             }
-            if(getenv(args[1]) != NULL){
-                unsetenv(args[1]);
-                printf("%s", "The variable has been erased\n");
-            }else{
-                printf("%s", "The variable does not exist\n");
+            
+            // Check if argument begins with '$' sign
+            if(args[1][0] == '$') {
+                var_path = remove_char(args[1]);
+            } else {
+                var_path = args[1];
             }
-            break;       
+            
+            // Check if the environment varirable is valid
+            if(getenv(var_path) != NULL) {
+                var_path = getenv(var_path);
+            } else {
+                printf("\n");
+            }
+            
+            // Check if theres data in path
+            if (var_path != NULL) {
+                printf("%s\n", var_path);
+            } else {
+                printf("%s\n", args[1]);
+            }
+            
+            break;
+        // Case 1: Changing the Value of an Environment Variable
+        case 1:
+            // Check if enough input args
+            if(args[1] == NULL){
+                printf("%s","not enought input arguments\n");
+                return -1;
+            }
+            
+            if(getenv(args[1]) != NULL){
+                printf("%s\n", args[1]);
+                //putenv(args[1]);
+            } else {
+                printf("\n");
+            }
+            
+            break;
     }
     return 0;
 }
@@ -114,8 +138,7 @@ static void file_io_handler(char * args[], char* inputFile, char* outputFile, in
     int f_descriptor; // between 0 and 19, describing the output or input file
     
     // Checks if child process could be created
-    if((pid=fork()) == -1){
-        printf("Child process could not be created\n");
+    if((pid=fork()) == -1) {
         return;
     }
 
@@ -143,7 +166,6 @@ static void file_io_handler(char * args[], char* inputFile, char* outputFile, in
         setenv("parent", getcwd(currentDirectory, 1024), 1);
         
         if (execvp(args[0],args) == err) {
-            printf("err");
             kill(getpid(), SIGTERM);
         }
     }
@@ -160,7 +182,6 @@ static void program_launcher(char **args, int background){
     int err = -1;
     
     if((pid=fork()) == -1) {
-        printf("Child process could not be created\n");
         return;
     }
 
@@ -173,7 +194,7 @@ static void program_launcher(char **args, int background){
         
         // End process if unknown commands are launched
         if (execvp(args[0], args) == err) {
-            printf("Command not found");
+            printf("command not found");
             kill(getpid(), SIGTERM);
         }
     }
@@ -184,7 +205,7 @@ static void program_launcher(char **args, int background){
     } else {
         // Skips call to wait, SIGCHILD handler takes care of 
         // child's return values
-        printf("Process created with PID: %d\n",pid);
+        printf("process created with PID: %d\n",pid);
     }
 }
 
@@ -196,22 +217,23 @@ static void program_launcher(char **args, int background){
  */
 static int command_handler(char * args[], char * hist[], int current) {
     
-    int i, j = 0;
+    int i = 0;
+    int j = 0;
     
     int f_descriptor;
-    int standardOut;
+    int std_out;
     int hist_len = current;
 
     int background = 0;
     
-    char *args_aux[256];
+    char *new_args[256];
     
     // Look for special characters and create new array of args
     while ( args[j] != NULL){
         if ( (strcmp(args[j], ">") == 0) || (strcmp(args[j], "<") == 0) || (strcmp(args[j], "&") == 0)){
             break;
         }
-        args_aux[j] = args[j];
+        new_args[j] = args[j];
         j++;
     }
     
@@ -228,11 +250,11 @@ static int command_handler(char * args[], char * hist[], int current) {
             if ( (strcmp(args[j],">") == 0) && (args[j+1] != NULL) ){
                 f_descriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
                 // Replaces the STDOUT with appropriate file
-                standardOut = dup(STDOUT_FILENO); 	// Makes a copy of STDOUT
+                std_out = dup(STDOUT_FILENO); 	// Makes a copy of STDOUT
                 dup2(f_descriptor, STDOUT_FILENO);
                 close(f_descriptor);
                 printf("%s\n", getcwd(currentDirectory, 1024));
-                dup2(standardOut, STDOUT_FILENO);
+                dup2(std_out, STDOUT_FILENO);
             }
         }else{
             printf("%s\n", getcwd(currentDirectory, 1024));
@@ -246,30 +268,13 @@ static int command_handler(char * args[], char * hist[], int current) {
     else if (strcmp(args[0],"cd") == 0) {
         change_directory(args);
     }
-    // 'environ' -> lists the environment variables
-    else if (strcmp(args[0],"environ") == 0) {
-        if (args[j] != NULL){
-            // Checks if file output requested
-            if ( (strcmp(args[j], ">") == 0) && (args[j+1] != NULL) ){
-                f_descriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
-                // Replaces the STDOUT with appropriate file
-                standardOut = dup(STDOUT_FILENO); 	// Makes a copy of STDOUT
-                dup2(f_descriptor, STDOUT_FILENO);
-                close(f_descriptor);
-                manage_environ(args, 0);
-                dup2(standardOut, STDOUT_FILENO);
-            }
-        } else {
-            manage_environ(args,0);
-        }
+    // 'echo' -> print environment variables
+    else if (strcmp(args[0], "echo") == 0) {
+        manage_environ(args, 0);
     }
-    // 'setenv' -> set environment variables
-    else if (strcmp(args[0], "setenv") == 0) {
+    // 'export' -> undefine environment variables
+    else if (strcmp(args[0], "export") == 0) {
         manage_environ(args, 1);
-    }
-    // 'unsetenv' -> undefine environment variables
-    else if (strcmp(args[0], "unsetenv") == 0) {
-        manage_environ(args, 2);
     }
     // 'history' -> displays history of input commands
     else if (strcmp(args[0], "history") == 0) {
@@ -292,7 +297,7 @@ static int command_handler(char * args[], char * hist[], int current) {
             } else if ((atoi(args[1]) > 0) && ((atoi(args[1])) <= HISTORY_COUNT)) {
                 history(hist, current, (atoi(args[1])));
             } else {
-                printf("Invalid paramters\n");
+                printf("invalid parameters\n");
             }
         }
     }
@@ -308,7 +313,7 @@ static int command_handler(char * args[], char * hist[], int current) {
                 return 1;
             // Checks for input redirection i.e. '<'
             }else if (strcmp(args[i], "<") == 0) {
-                file_io_handler(args_aux, args[i+1], NULL, 1);
+                file_io_handler(new_args, args[i+1], NULL, 1);
                 return 1;
             }
             // Checks for output redirection i.e. '>'
@@ -317,13 +322,13 @@ static int command_handler(char * args[], char * hist[], int current) {
                     printf("Not enough input arguments\n");
                     return -1;
                 }
-                file_io_handler(args_aux, NULL, args[i+1], 0);
+                file_io_handler(new_args, NULL, args[i+1], 0);
                 return 1;
             }
             i++;
         }
         // Launches program in the background
-        program_launcher(args_aux, background);
+        program_launcher(new_args, background);
     }
     return 1;
 }

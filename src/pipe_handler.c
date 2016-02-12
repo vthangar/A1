@@ -29,7 +29,10 @@ void pipe_handler(char * args[]){
     int end = 0;
     
     // Loop variables
-    int i, j, k, l = 0;
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    int l = 0;
     
     // Get number of commands seperated by '|'
     while (args[l] != NULL){
@@ -78,7 +81,7 @@ void pipe_handler(char * args[]){
                     close(file_descriptor_even[1]);
                 }
             }
-            printf("Child process could not be created\n");
+            // Return if the child process cannot be created
             return;
         }
         if(pid==0){
