@@ -28,7 +28,7 @@
 #define FALSE 0
 
 pid_t pid;
-int no_reprint_prmpt;
+int no_redisplay;
 
 /**
  * Implicit Declarations

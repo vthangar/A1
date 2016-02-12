@@ -10,6 +10,5 @@
 #define util_h
 
 static char* currentDirectory;
-extern char** environ;
 
 #endif /* a1_shell_h */
