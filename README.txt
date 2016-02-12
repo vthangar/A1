@@ -38,12 +38,13 @@ Working
 ------------------------------------------------------------------------------------
 
 — terminates shell (‘exit’)
-- command, with no arguments (’ls’)
-- command, with arguments (’ls -l’)
-- command, with/without arguments, executed in the background using & (xemacs &)
-- command, with/without arguments, whose output is redirected to a file (ls -l > foo)
-- command, with/without arguments, whose input is redirected from a file (sort < test file)
-- command, with/without arguments, whose output is piped to the input of another command (ls -l | more)
+- command:
+     with no arguments (’ls’)
+     with arguments (’ls -l’)
+     with/without arguments, executed in the background using & (xemacs &)
+     with/without arguments, whose output is redirected to a file (ls -l > foo)
+     with/without arguments, whose input is redirected from a file (sort < test file)
+     with/without arguments, whose output is piped to the input of another command (ls -l | more)
 - print environment variables (echo $PATH)
 - history, history -c, history n 
 - change directory (cd)
