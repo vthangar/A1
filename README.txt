@@ -54,5 +54,9 @@ Not Working
 - export command
 - reading in profile file on initialization
 
-Issues
+Known Issues
 ------------------------------------------------------------------------------------
+
+1. When you use the ls command, sometimes this error comes up:
+
+ls: cannot access : No such file or directory
